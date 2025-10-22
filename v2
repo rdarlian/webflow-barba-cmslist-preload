@@ -1,0 +1,149 @@
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  console.log("🔥 Global script aktif — Preloader + Barba + FS List + Grid");
+
+  const loader = document.getElementById("preloader");
+  const percentText = loader?.querySelector(".percent");
+  const progressBar = loader?.querySelector(".progress-bar");
+
+  // ===== PRELOADER =====
+  async function runPreloader() {
+    if (!loader) return;
+    console.log("⏳ Menjalankan preloader...");
+
+    let progress = 0;
+    const tick = setInterval(() => {
+      progress += Math.random() * 4;
+      if (progress > 95) progress = 95;
+      if (percentText) percentText.textContent = Math.round(progress) + "%";
+      if (progressBar) progressBar.style.width = progress + "%";
+    }, 80);
+
+    await new Promise(r => setTimeout(r, 300));
+    clearInterval(tick);
+
+    if (percentText) percentText.textContent = "100%";
+    if (progressBar) progressBar.style.width = "100%";
+
+    await new Promise(r => setTimeout(r, 600));
+    gsap.to(loader, { opacity: 0, duration: 0.6, onComplete: () => loader.remove() });
+    console.log("✅ Preloader selesai & dihapus!");
+  }
+
+  // ===== GRID HOME =====
+  function resetGridHome() {
+    const colList = document.querySelector('[data-barba-namespace="home"] .w-dyn-items');
+    if (!colList) return;
+    [...colList.children].forEach(item => item.style.gridArea = '');
+    console.log("♻️ Grid Home di-reset");
+  }
+
+  function setupGridHome() {
+    const colList = document.querySelector('[data-barba-namespace="home"] .w-dyn-items');
+    if (!colList) return;
+    [...colList.children].forEach((item, idx) => item.style.gridArea = `Area-${idx+1}`);
+    console.log("🔹 Grid Home diinisialisasi");
+  }
+
+  // ===== FS RESTART (OPTIONAL) =====
+  async function restartFinsweet() {
+    const fsList = window.FinsweetAttributes?.modules?.list;
+    if (!fsList) return;
+    if (fsList.loading) await fsList.loading;
+    await fsList.restart();
+    console.log("✅ FS List direstart");
+  }
+
+  // ===== WAIT FOR IMAGES =====
+  async function waitForImages(selector) {
+    const imgs = document.querySelectorAll(`${selector} img`);
+    if (imgs.length === 0) return;
+    await Promise.all([...imgs].map(img => img.complete ? null : new Promise(res => {
+      img.onload = img.onerror = res;
+    })));
+  }
+
+  // ===== HOME CODE =====
+  async function runHomeCode({ skipFSRestart=false } = {}) {
+    const container = '[data-barba-namespace="home"] .w-dyn-items';
+    const items = '[data-barba-namespace="home"] .w-dyn-item';
+
+    await waitForElement(container);
+    if (!skipFSRestart) await restartFinsweet();
+
+    if (typeof window.HomeCode === "function") await window.HomeCode();
+
+    resetGridHome();
+    setupGridHome();
+  }
+
+  // ===== BARBA INIT =====
+  const pageCache = new Map();
+
+  barba.hooks.beforeLeave(data => pageCache.set(data.current.namespace, data.current.container.cloneNode(true)));
+  barba.hooks.beforeEnter(data => {
+    const cached = pageCache.get(data.next.namespace);
+    if (cached) data.next.container.innerHTML = cached.innerHTML;
+  });
+
+  barba.init({
+    transitions: [{
+      name: "fade",
+      async leave(data) { await gsap.to(data.current.container, { opacity: 0, duration: 0.3 }); },
+      async enter(data) { await gsap.from(data.next.container, { opacity: 0, duration: 0.3 }); }
+    }],
+    views: [
+      {
+        namespace: "home",
+        async afterEnter() {
+          console.log("🏠 AfterEnter Home");
+          await runHomeCode({ skipFSRestart:true });
+
+          if (window.ScrollTrigger) {
+            ScrollTrigger.getAll().forEach(t => t.kill());
+            window.init?.();
+            ScrollTrigger.refresh();
+          }
+
+          window.Webflow?.require("ix2")?.init();
+
+          const hero = document.querySelector(".c-home__hero");
+          if (hero) hero.style.visibility = "visible";
+        }
+      },
+      {
+        namespace: "works",
+        async afterEnter() {
+          console.log("💼 AfterEnter Works");
+          await restartFinsweet();
+          await waitForImages('[data-barba-namespace="works"]');
+          window.WorkCode && await window.WorkCode();
+        }
+      }
+    ]
+  });
+
+  // ===== FIRST LOAD =====
+  (async () => {
+    const firstLoad = sessionStorage.getItem("firstLoadDone") === "true";
+    if (!firstLoad) {
+      await runPreloader();
+      sessionStorage.setItem("firstLoadDone","true");
+    }
+    await runHomeCode({ skipFSRestart:true });
+  })();
+
+  // ===== HELPER =====
+  async function waitForElement(selector) {
+    return new Promise(resolve => {
+      const el = document.querySelector(selector);
+      if (el) return resolve(el);
+      const observer = new MutationObserver(() => {
+        const e = document.querySelector(selector);
+        if (e) { observer.disconnect(); resolve(e); }
+      });
+      observer.observe(document.body, { childList: true, subtree:true });
+    });
+  }
+
+});
