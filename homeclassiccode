@@ -1,0 +1,173 @@
+<script>
+window.HomeClassicCode = async function() {
+    // PORTFOLIO GRID AREA ASSIGN
+  const colListWrapper = document.querySelector(".w-dyn-items");
+  const totalItems = [...colListWrapper.children];
+  //Assign Are
+  function assignArea() {
+    totalItems.forEach((item, idx) => {
+      item.style.gridArea = `Area-${idx + 1}`;
+    });
+  }
+  //Set Grid
+  function setGrid() {
+    colListWrapper.classList.add("c-homecl-showcase__item");
+    assignArea();
+  }
+	//Grid Set
+  setGrid();
+  
+  function init() {
+  console.log("Jalaaan niiih");
+  // HIDE HERO ON SCROLL
+  //let mm = gsap.matchMedia();
+  //mm.add("(min-width: 768px)", () => {
+    gsap.to(".c-homecl-hero", {
+      opacity: 0,
+      y: 0,
+      scrollTrigger: {
+        trigger: ".c-homecl-showcase",
+        start: 0,
+        end: "top +=180px",
+        pin: ".c-homecl-hero",
+        pinSpacing: false,
+        scrub: true,
+        //markers: true
+      },
+    })
+//});
+
+
+  //SCROLL SPEED FEATURED PORTFOLIO
+  const featuredPortfolio = gsap.utils.toArray(".c-homecl-showcase > .c-homecl-showcase__item");
+
+  featuredPortfolio[0].setAttribute("data-speed", "1.3");
+  featuredPortfolio[1].setAttribute("data-speed", "1.5");
+  featuredPortfolio[2].setAttribute("data-speed", "1");
+  featuredPortfolio[3].setAttribute("data-speed", "1.1");
+
+  featuredPortfolio.forEach((item, index) => {
+    console.log(item);
+  });
+  
+  smoother.effects(featuredPortfolio);
+
+
+  // SECTION SERVICES
+  const services = gsap.utils.toArray(".c-homecl-services__content-wrapper > .c-homecl-services__content");
+  services.forEach((item, index) => {
+    console.log(item);
+  });
+  const servicesTitle = gsap.utils.toArray(".c-homecl-services__content > h2");
+  servicesTitle.forEach((item, index) => {
+    console.log(item);
+  });
+  const servicesImage = gsap.utils.toArray(".c-homecl-services__image-content > .c-homecl-services__image");
+  servicesImage.forEach((item, index) => {
+    console.log(item);
+  });
+
+  ScrollTrigger.create({
+    trigger: ".s-homecl-services",
+    start: "top top",
+    end: "bottom bottom",
+    pin: ".c-homecl-services__image-wrapper",
+    pinSpacing: false,
+    scrub: 1,
+    //markers: true,
+    snap: {
+      snapTo: services,
+      duration: 0.3,
+      delay: 0.1,
+      ease: "power1.inOut"
+    },
+  });
+
+  //mm.add("(min-width: 768px)", () => {
+    gsap.to(servicesImage[0], {
+      yPercent: -100,
+      duration: 1,
+      scrollTrigger: {
+        trigger: servicesTitle[0],
+        start: "top bottom",
+        scrub: 1,
+        //toggleActions: "play none none reverse",
+        //markers: true,
+      },
+    });
+
+    gsap.to(servicesImage[1], {
+      yPercent: -100,
+      duration: 1,
+      scrollTrigger: {
+        trigger: servicesTitle[1],
+        start: "top bottom",
+        scrub: 1,
+        //markers: true,
+      },
+    });
+
+    gsap.to(servicesImage[2], {
+      yPercent: -100,
+      duration: 1,
+      scrollTrigger: {
+        trigger: servicesTitle[2],
+        start: "top bottom",
+        end: "top top+=24px",
+        scrub: 1,
+        markers: true,
+      },
+    });
+  //});
+} //function init()
+
+window.addEventListener("load", function(event) {
+	init();
+  ScrollTrigger.refresh();
+  
+  // navbar animation
+  const menuButton = document.querySelector('.menu-button');
+  const menuOverlay = document.querySelector('.w-nav-overlay');
+  const menuLinks = document.querySelectorAll('.c-menu__links');
+  
+  let menuOpen = false;
+  
+  const tl = gsap.timeline({ paused: true });
+  
+  // Open Animation
+    tl.to(menuOverlay, {
+        duration: 0.8,
+        autoAlpha: 1,
+        yPercent: 0,
+        ease: "expo.out"
+    })
+    .to(menuLinks, {
+        duration: 0.6,
+        y: 0,
+        autoAlpha: 1,
+        stagger: 0.08, // Animate links one after another
+        ease: "expo.out"
+    }, "<0.2"); // Start links animation slightly after overlay
+
+	// Click event listener
+    menuButton.addEventListener('click', () => {
+        if (menuOpen) {
+            tl.reverse(); // Play animation in reverse
+        } else {
+            tl.play(); // Play animation forward
+        }
+        menuOpen = !menuOpen; // Toggle state
+    });
+})
+
+ScrollTrigger.refresh();
+  };
+  
+  
+
+</script>
+
+<script>
+//PAGE: HOMEPAGE CLASSIC
+
+</script>
